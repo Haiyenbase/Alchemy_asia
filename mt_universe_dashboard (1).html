@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MT Universe — Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#f7f6f3;--surface:#fff;--surface2:#f0efe9;
+  --border:rgba(0,0,0,.08);--border-md:rgba(0,0,0,.14);
+  --text-primary:#1a1a18;--text-secondary:#6b6b66;--text-tertiary:#9b9b96;
+  --radius-md:8px;--radius-lg:12px;
+  --teal:#1D9E75;--teal-l:#E1F5EE;--teal-d:#085041;
+  --blue:#378ADD;--blue-l:#E6F1FB;--blue-d:#0C447C;
+  --amber:#EF9F27;--amber-l:#FAEEDA;--amber-d:#633806;
+  --coral:#D85A30;--coral-l:#FAECE7;--coral-d:#712B13;
+  --pink:#D4537E;--pink-l:#FBEAF0;--pink-d:#72243E;
+  --purple:#7F77DD;--purple-l:#EEEDFE;--purple-d:#3C3489;
+  --red:#E24B4A;--red-l:#FCEBEB;--red-d:#791F1F;
+  --gray:#888780;--gray-l:#F1EFE8;--gray-d:#444441;
+  --green:#639922;--green-l:#EAF3DE;--green-d:#27500A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text-primary);font-size:13px;line-height:1.5}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+
+/* ── Header ── */
+.header{background:var(--surface);border-bottom:.5px solid var(--border-md);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:300}
+.logo-mark{width:28px;height:28px;background:var(--text-primary);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.logo-mark span{color:#fff;font-size:11px;font-weight:600;letter-spacing:-.5px}
+.hdr-left{display:flex;align-items:center;gap:12px}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.hdr-title{font-size:14px;font-weight:500}
+.badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500}
+
+/* ── Tab nav ── */
+.tab-nav{background:var(--surface);border-bottom:.5px solid var(--border-md);padding:0 24px;display:flex;position:sticky;top:52px;z-index:200}
+.tab-btn{font-size:12px;font-weight:500;color:var(--text-tertiary);padding:10px 16px;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;font-family:inherit;white-space:nowrap}
+.tab-btn:hover{color:var(--text-secondary)}
+.tab-btn.active{color:var(--text-primary);border-bottom-color:var(--text-primary)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.main{padding:20px 24px;max-width:1500px;margin:0 auto}
+
+/* ── Labels ── */
+.section-label{font-size:10px;font-weight:500;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;margin-top:20px}
+.section-label:first-child{margin-top:0}
+
+/* ── Metric cards ── */
+.mc-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:4px}
+.mc{background:var(--surface);border:.5px solid var(--border);border-radius:var(--radius-lg);padding:13px 16px;border-left:2.5px solid}
+.mc-label{font-size:10px;color:var(--text-tertiary);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.mc-val{font-size:24px;font-weight:500;line-height:1}
+.mc-sub{font-size:10px;color:var(--text-tertiary);margin-top:4px}
+
+/* ── Chart card ── */
+.card{background:var(--surface);border:.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px}
+.card-title{font-size:11px;font-weight:500;color:var(--text-secondary);margin-bottom:12px;text-transform:uppercase;letter-spacing:.05em}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.g32{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px}
+.chart-legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;font-size:11px;color:var(--text-secondary)}
+.leg{display:flex;align-items:center;gap:5px}
+.leg-sq{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* ── Heatmap ── */
+.hm-card{background:var(--surface);border:.5px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;margin-bottom:12px}
+.hm-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--text-secondary);align-items:center}
+.hm-leg{display:flex;align-items:center;gap:4px}
+.hm-sq{width:11px;height:11px;border-radius:2px;flex-shrink:0}
+.scroll-wrap{overflow-x:auto;overflow-y:auto;border:.5px solid var(--border);border-radius:var(--radius-md)}
+.scroll-wrap.hm{max-height:440px}
+table{border-collapse:collapse;font-size:11px;min-width:100%}
+.seg-btn{font-size:10px;padding:3px 9px;border:.5px solid var(--border-md);border-radius:20px;background:var(--surface);color:var(--text-secondary);cursor:pointer;transition:all .15s;font-family:inherit}
+.seg-btn:hover{background:var(--surface2)}
+.seg-btn.active{background:var(--text-primary);color:#fff;border-color:var(--text-primary)}
+
+/* ── Distribution heatmap table ── */
+thead.chdr th{position:sticky;top:0;background:var(--surface2);z-index:10;padding:4px 2px;font-weight:500;color:var(--text-secondary);white-space:nowrap;border-bottom:.5px solid var(--border-md);min-width:48px;max-width:48px;text-align:center;vertical-align:bottom}
+thead.chdr th.f1{position:sticky;left:0;z-index:20;min-width:72px;max-width:72px;text-align:left;padding-left:10px}
+thead.chdr th.f2{position:sticky;left:72px;z-index:20;min-width:128px;max-width:128px;text-align:left;padding-left:6px}
+thead.chdr th.f3{position:sticky;left:200px;z-index:20;min-width:68px;max-width:68px;text-align:right;padding-right:10px}
+.prod-label{writing-mode:vertical-rl;transform:rotate(180deg);font-size:10px;display:inline-block;max-height:86px;overflow:hidden;text-overflow:ellipsis;color:var(--text-secondary)}
+tr.dr td{padding:3px 2px;text-align:center;border-bottom:.5px solid var(--border)}
+tr.dr td.f1{position:sticky;left:0;z-index:5;background:var(--surface);text-align:left;padding-left:10px;min-width:72px;max-width:72px;border-right:.5px solid var(--border);white-space:nowrap}
+tr.dr td.f2{position:sticky;left:72px;z-index:5;background:var(--surface);min-width:128px;max-width:128px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-right:.5px solid var(--border);padding-left:6px;font-weight:500}
+tr.dr td.f3{position:sticky;left:200px;z-index:5;background:var(--surface);text-align:right;padding-right:10px;min-width:68px;max-width:68px;border-right:.5px solid var(--border-md);white-space:nowrap;color:var(--text-secondary)}
+tr.dr:hover td{background:#f5f5f0!important}
+tr.dr:last-child td{border-bottom:none}
+.cell{width:20px;height:20px;border-radius:3px;display:inline-block;vertical-align:middle}
+.c1{background:#1D9E75}.c2{background:#B4B2A9}.crl{background:#378ADD}.cbl{background:#E24B4A}.cl{background:#B5D4F4}.crj{background:#EF9F27}.c0{background:transparent;border:.5px solid var(--border-md)}
+.seg-tag{display:inline-block;font-size:9px;padding:1px 5px;border-radius:8px;font-weight:500;white-space:nowrap}
+
+/* ── BOD tables ── */
+.bod-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.bod-tbl th{background:var(--surface2);padding:8px 12px;font-weight:500;color:var(--text-secondary);font-size:10px;text-transform:uppercase;letter-spacing:.04em;text-align:left;border-bottom:.5px solid var(--border-md);white-space:nowrap;position:sticky;top:0;z-index:5}
+.bod-tbl th.r{text-align:right}
+.bod-tbl td{padding:8px 12px;border-bottom:.5px solid var(--border);vertical-align:middle}
+.bod-tbl td.r{text-align:right;font-variant-numeric:tabular-nums}
+.bod-tbl tr:last-child td{border-bottom:none}
+.bod-tbl tr:hover td{background:var(--surface2)}
+.bod-tbl tr.total-row td{background:var(--surface2);font-weight:500;border-top:.5px solid var(--border-md)}
+.status-pill{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500;white-space:nowrap}
+.method-tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;white-space:nowrap;border:.5px solid}
+.pbar-wrap{background:var(--surface2);border-radius:3px;height:5px;width:72px;display:inline-block;vertical-align:middle;overflow:hidden}
+.pbar-fill{height:100%;border-radius:3px}
+
+/* ── BOD heatmap (partner × channel) ── */
+.bod-hm-wrap{overflow-x:auto;overflow-y:auto;max-height:380px;border:.5px solid var(--border);border-radius:var(--radius-md)}
+.bhm-tbl{border-collapse:collapse;font-size:11px;min-width:100%}
+.bhm-tbl th{position:sticky;top:0;background:var(--surface2);z-index:10;padding:7px 12px;font-weight:500;color:var(--text-secondary);text-align:center;border-bottom:.5px solid var(--border-md);white-space:nowrap;font-size:10px}
+.bhm-tbl th.left{text-align:left;position:sticky;left:0;z-index:20}
+.bhm-tbl td{padding:6px 12px;border-bottom:.5px solid var(--border);text-align:center;font-size:11px}
+.bhm-tbl td.left{position:sticky;left:0;background:var(--surface);font-weight:500;text-align:left;border-right:.5px solid var(--border);white-space:nowrap;z-index:5}
+.bhm-tbl tr:last-child td{border-bottom:none}
+.bhm-tbl tr:hover td{background:var(--surface2)!important}
+.heat-cell{display:inline-block;min-width:52px;padding:3px 6px;border-radius:4px;font-weight:500;font-size:11px;text-align:center}
+
+/* ── Detail accordion ── */
+.partner-block{background:var(--surface);border:.5px solid var(--border);border-radius:var(--radius-lg);margin-bottom:10px;overflow:hidden}
+.partner-hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;cursor:pointer;user-select:none;border-bottom:.5px solid transparent;transition:border-color .15s}
+.partner-hdr:hover{background:var(--surface2)}
+.partner-hdr.open{border-bottom-color:var(--border)}
+.partner-hdr-left{display:flex;align-items:center;gap:12px}
+.partner-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.partner-hdr-title{font-size:13px;font-weight:500}
+.partner-hdr-sub{font-size:11px;color:var(--text-tertiary)}
+.partner-hdr-right{display:flex;align-items:center;gap:10px}
+.partner-body{display:none;padding:0}
+.partner-body.open{display:block}
+.chevron{font-size:12px;color:var(--text-tertiary);transition:transform .2s;display:inline-block}
+.chevron.open{transform:rotate(180deg)}
+.contract-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-bottom:.5px solid var(--border)}
+.cs-item{padding:10px 14px;border-right:.5px solid var(--border)}
+.cs-item:last-child{border-right:none}
+.cs-label{font-size:10px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.cs-val{font-size:12px;font-weight:500}
+
+/* ── Tooltip ── */
+#tip{position:fixed;background:var(--surface);border:.5px solid var(--border-md);border-radius:var(--radius-md);padding:8px 10px;font-size:11px;pointer-events:none;z-index:9999;display:none;max-width:230px}
+#tip b{font-weight:500}
+.tip-sub{color:var(--text-secondary);margin-top:2px}
+</style>
+</head>
+<body>
+<h2 class="sr-only">MT Universe Dashboard — Phân tích phân phối và đối tác sản xuất</h2>
+
+<!-- Header -->
+<div class="header">
+  <div class="hdr-left">
+    <div class="logo-mark"><span>MT</span></div>
+    <span class="hdr-title">MT Universe — Dashboard</span>
+  </div>
+  <div class="hdr-right">
+    <span class="badge" style="background:var(--teal-l);color:var(--teal-d)">39 Outlets</span>
+    <span class="badge" style="background:var(--purple-l);color:var(--purple-d)">5 Đối tác SX</span>
+    <span class="badge" style="background:var(--surface2);color:var(--text-tertiary)">2024 YTD</span>
+  </div>
+</div>
+
+<!-- Tab nav -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('dist',this)">Phân phối kênh</button>
+  <button class="tab-btn" onclick="switchTab('bod',this)">Báo cáo BOD — Đối tác sản xuất</button>
+</div>
+
+<!-- ═════ TAB 1: DISTRIBUTION ═════ -->
+<div id="tab-dist" class="tab-panel active">
+<div class="main">
+  <div class="section-label">Tổng quan</div>
+  <div class="mc-row" style="grid-template-columns:repeat(4,1fr)">
+    <div class="mc" style="border-left-color:var(--teal)"><div class="mc-label">Tổng outlets</div><div class="mc-val">39</div><div class="mc-sub">6 kênh phân phối</div></div>
+    <div class="mc" style="border-left-color:var(--blue)"><div class="mc-label">CVS</div><div class="mc-val">8</div><div class="mc-sub">20.5% tổng outlets</div></div>
+    <div class="mc" style="border-left-color:var(--amber)"><div class="mc-label">Listing fee cao nhất</div><div class="mc-val">50M</div><div class="mc-sub">WINMART</div></div>
+    <div class="mc" style="border-left-color:var(--coral)"><div class="mc-label">SKUs theo dõi</div><div class="mc-val">14</div><div class="mc-sub">Campari, Wild Turkey, Skyy…</div></div>
+  </div>
+
+  <div class="section-label">Phân tích kênh &amp; listing fee</div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">Số outlets theo kênh</div>
+      <div class="chart-legend" id="donut-legend"></div>
+      <div style="position:relative;width:100%;height:200px"><canvas id="segChart" role="img" aria-label="Outlets theo kênh"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Listing fee — supermarket (triệu VND)</div>
+      <div style="position:relative;width:100%;height:250px"><canvas id="feeChart" role="img" aria-label="Listing fee supermarket"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-label">Heatmap phân phối sản phẩm</div>
+  <div class="hm-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center" id="segFilters"></div>
+      <div class="hm-legend">
+        <span class="hm-leg"><span class="hm-sq" style="background:#1D9E75"></span>Listed</span>
+        <span class="hm-leg"><span class="hm-sq" style="background:#378ADD"></span>RL</span>
+        <span class="hm-leg"><span class="hm-sq" style="background:#E24B4A"></span>BL</span>
+        <span class="hm-leg"><span class="hm-sq" style="background:#B5D4F4"></span>L</span>
+        <span class="hm-leg"><span class="hm-sq" style="background:#EF9F27"></span>RJ</span>
+        <span class="hm-leg"><span class="hm-sq" style="background:#B4B2A9"></span>Listed (2)</span>
+        <span class="hm-leg"><span class="hm-sq c0"></span>—</span>
+      </div>
+    </div>
+    <div class="scroll-wrap hm"><table id="heatTable"></table></div>
+  </div>
+</div>
+</div>
+
+<!-- ═════ TAB 2: BOD ═════ -->
+<div id="tab-bod" class="tab-panel">
+<div class="main">
+
+  <!-- KPIs -->
+  <div class="section-label">Tổng quan đối tác sản xuất</div>
+  <div class="mc-row">
+    <div class="mc" style="border-left-color:var(--purple)"><div class="mc-label">Đối tác SX</div><div class="mc-val">5</div><div class="mc-sub">Spirits & Gin portfolio</div></div>
+    <div class="mc" style="border-left-color:var(--teal)"><div class="mc-label">Tổng chai YTD</div><div class="mc-val" id="kpi-total">—</div><div class="mc-sub">Thực tế phân phối</div></div>
+    <div class="mc" style="border-left-color:var(--blue)"><div class="mc-label">Kế hoạch năm</div><div class="mc-val" id="kpi-plan">—</div><div class="mc-sub">Cam kết hợp đồng</div></div>
+    <div class="mc" style="border-left-color:var(--amber)"><div class="mc-label">Tỷ lệ hoàn thành</div><div class="mc-val" id="kpi-pct">—</div><div class="mc-sub">Actual vs. Plan</div></div>
+    <div class="mc" style="border-left-color:var(--red)"><div class="mc-label">Đang at-risk</div><div class="mc-val" id="kpi-risk">—</div><div class="mc-sub">Outlet dưới target</div></div>
+  </div>
+
+  <!-- Chart row 1: Line + Bar -->
+  <div class="section-label">1 &amp; 2 — Kế hoạch / thực tế &amp; so sánh đại lý</div>
+  <div class="g2">
+    <!-- 1. Line: cumulative actual vs plan -->
+    <div class="card">
+      <div class="card-title">Lũy kế thực tế vs. kế hoạch (chai)</div>
+      <div class="chart-legend" id="line-legend"></div>
+      <div style="position:relative;width:100%;height:240px"><canvas id="lineChart" role="img" aria-label="Lũy kế thực tế vs kế hoạch theo tháng"></canvas></div>
+    </div>
+    <!-- 2. Bar: outlet actual vs plan -->
+    <div class="card">
+      <div class="card-title">Tổng chai theo đại lý vs. kế hoạch</div>
+      <div style="position:relative;width:100%;height:250px"><canvas id="outletBar" role="img" aria-label="Chai theo đại lý vs kế hoạch"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Chart row 2: Partner donut + Partner bar stacked -->
+  <div class="section-label">3 — Phân tích theo đối tác sản xuất</div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">Thực tế theo đối tác (chai)</div>
+      <div class="chart-legend" id="partner-donut-legend"></div>
+      <div style="position:relative;width:100%;height:220px"><canvas id="partnerDonut" role="img" aria-label="Chai theo đối tác"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Thực tế vs. kế hoạch theo đối tác</div>
+      <div style="position:relative;width:100%;height:250px"><canvas id="partnerBar" role="img" aria-label="Actual vs plan theo đối tác"></canvas></div>
+    </div>
+  </div>
+
+  <!-- 4. Heatmap Partner × Channel -->
+  <div class="section-label">4 — Heatmap đối tác × kênh phân phối (tổng chai)</div>
+  <div class="hm-card">
+    <div style="font-size:11px;color:var(--text-secondary);margin-bottom:10px">Màu thể hiện khối lượng: <span style="background:#E1F5EE;color:#085041;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:500">thấp</span> → <span style="background:#085041;color:#fff;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:500">cao</span></div>
+    <div class="bod-hm-wrap"><table class="bhm-tbl" id="bodHmTable"></table></div>
+  </div>
+
+  <!-- 5. Detail table per partner (accordion) -->
+  <div class="section-label">5 — Chi tiết theo đối tác, đại lý, kênh</div>
+  <div id="accordionWrap"></div>
+
+</div>
+</div>
+
+<div id="tip"><b id="tip-o"></b><div class="tip-sub" id="tip-p"></div><div class="tip-sub" id="tip-v"></div></div>
+
+<script>
+/* ══════════════════════════════════════
+   DATA — DISTRIBUTION (Tab 1)
+══════════════════════════════════════ */
+const products=['Aperol 0.7L','Bulldog 0.75L','Campari 0.75L','Campari Negroni RTD 0.5L','Kingston62 Gold 0.75L','Kingston62 White 0.75L','Skyy Vodka 0.18L','Skyy Vodka 0.75L','Wild Turkey 12yo 0.7L','Wild Turkey 81 0.75L','Wild Turkey 8yo 0.7L','Wild Turkey Rare Breed 0.75L','Wild Turkey Rye 0.7L','No 3 Gin 0.7L'];
+const segColors={CVS:'#378ADD',Supermarket:'#1D9E75',Minimart:'#D85A30','Liquor Store':'#D4537E',Ecom:'#7F77DD','Department Store':'#888780'};
+const segBg={CVS:'#E6F1FB',Supermarket:'#E1F5EE',Minimart:'#FAECE7','Liquor Store':'#FBEAF0',Ecom:'#EEEDFE','Department Store':'#F1EFE8'};
+const segTx={CVS:'#0C447C',Supermarket:'#085041',Minimart:'#712B13','Liquor Store':'#72243E',Ecom:'#3C3489','Department Store':'#444441'};
+const ALL_SEGS=['CVS','Supermarket','Minimart','Liquor Store','Ecom','Department Store'];
+const L1=1,L2=2,RL='RL',BL='BL',Lx='L',RJ='RJ';
+const distRows=[
+  {seg:'CVS',name:'7-ELEVEN',fee:10000000,d:[L1,L1,L1,0,0,0,0,L1,L2,L1,L1,L2,L1,L1]},
+  {seg:'CVS',name:'CIRCLE K',fee:200000000,d:[0,RL,0,0,0,0,0,0,L2,L1,L1,L2,L2,L2]},
+  {seg:'CVS',name:'DIFULL K',fee:25000000,d:[0,0,0,0,0,0,0,0,L2,L1,L1,L2,L2,L2]},
+  {seg:'CVS',name:'VINMART+',fee:300000000,d:[0,0,0,0,0,0,0,0,L2,L1,L1,L2,L2,L2]},
+  {seg:'CVS',name:'FAMILY MART',fee:10000000,d:[L1,0,L1,0,0,0,0,0,L2,L1,L1,L2,L1,L1]},
+  {seg:'CVS',name:'GS 25',fee:18000000,d:[L1,0,L1,0,0,0,0,0,L2,L1,L1,L2,L2,L2]},
+  {seg:'CVS',name:'GS 25 Flagship',fee:18000000,d:[L1,0,L1,0,0,0,0,0,L2,L1,L1,L2,L2,L2]},
+  {seg:'CVS',name:'MINISTOP',fee:6000000,d:[L1,L1,L1,0,0,0,0,L1,L2,L1,L1,L2,L1,L1]},
+  {seg:'Department Store',name:'MEGA',fee:10000000,d:[L1,Lx,L1,L2,Lx,0,0,L2,L2,L1,L1,L2,L2,L2]},
+  {seg:'Ecom',name:'LAZADA',fee:0,d:[0,0,0,0,0,0,0,0,L2,L1,L1,L2,L2,0]},
+  {seg:'Ecom',name:'SHOPEE',fee:0,d:[0,0,0,0,0,0,0,0,L2,L1,L1,L2,L2,0]},
+  {seg:'Ecom',name:'TIKI',fee:0,d:[0,0,0,0,0,0,0,0,L2,L1,L1,L2,L2,0]},
+  {seg:'Liquor Store',name:'ATC WINE MERCHANT',fee:0,d:[L1,L1,L1,L1,L1,L1,0,L1,L1,L1,L1,L1,L1,L1]},
+  {seg:'Liquor Store',name:'DMS',fee:0,d:[0,0,0,0,0,0,0,0,L1,L1,L1,L1,L1,L1]},
+  {seg:'Liquor Store',name:'DUY ANH',fee:300000,d:[0,0,0,0,0,0,0,0,L1,L1,L1,L1,L1,L1]},
+  {seg:'CVS',name:'BINGO',fee:0,d:[0,0,0,0,0,0,0,0,L2,L1,L1,L2,L2,L2]},
+  {seg:'Liquor Store',name:'SASCO',fee:500000,d:[0,0,0,0,0,0,0,0,L1,L1,L1,L1,L1,L1]},
+  {seg:'Liquor Store',name:'SASCO (CSM)',fee:500000,d:[0,0,0,0,0,0,0,0,L1,L1,L1,L1,L1,L1]},
+  {seg:'Liquor Store',name:'EASCO CD',fee:0,d:[0,0,0,0,0,0,0,0,L1,L1,L1,L1,L1,L1]},
+  {seg:'Liquor Store',name:'WAREHOUSE',fee:6000000,d:[0,0,0,0,0,0,0,0,L1,L1,L1,L1,L1,L1]},
+  {seg:'Minimart',name:'FARMER',fee:300000,d:[L1,L1,L1,L2,L2,L2,L2,L2,L2,L1,L1,L2,L1,L1]},
+  {seg:'Minimart',name:'KING KONG',fee:1000000,d:[L1,L1,L1,L2,L2,L2,L2,L2,L2,L1,L1,L2,L1,L1]},
+  {seg:'Minimart',name:'MEGA MART',fee:10000000,d:[L1,L1,L1,L2,L2,L2,L2,L2,L2,L1,L1,L2,L1,L1]},
+  {seg:'Minimart',name:'MOONMILK',fee:0,d:[L1,L1,L1,L2,L2,L2,L2,L2,L2,L1,L1,L2,L1,L1]},
+  {seg:'Minimart',name:'NAM AN SUPERB',fee:2000000,d:[L2,Lx,L2,L2,Lx,0,L2,L2,L2,L1,L1,L2,L2,L2]},
+  {seg:'Supermarket',name:'AN NAM',fee:6000000,d:[L1,L1,L1,BL,RJ,RJ,L1,L1,L2,L1,L1,L2,L1,L1]},
+  {seg:'Supermarket',name:'AEON MALL',fee:7000000,d:[Lx,RL,L2,L2,Lx,L2,Lx,L1,L2,L1,L1,L2,L2,L2]},
+  {seg:'Supermarket',name:'BIG C/TOPS/GO',fee:30500000,d:[L2,Lx,L2,L2,Lx,L2,Lx,L1,L2,L1,L1,L2,L2,L2]},
+  {seg:'Supermarket',name:'TOPS CSM',fee:0,d:[L1,L1,L1,L2,L2,L1,L2,L2,L2,L1,L1,L2,L2,L2]},
+  {seg:'Supermarket',name:'COOPMART',fee:5000000,d:[L2,RJ,RJ,L2,L2,L2,L2,L2,L2,L1,L1,L2,L2,L2]},
+  {seg:'Supermarket',name:'COOPMART FL',fee:5000000,d:[L2,RJ,RJ,L2,L1,L2,L2,L2,L2,L1,L1,L2,L2,L2]},
+  {seg:'Supermarket',name:'EMART',fee:2000000,d:[L2,RJ,RJ,L2,L1,L1,L2,L2,L2,L1,L1,L2,L2,L2]},
+  {seg:'Supermarket',name:'FESTIVAL MARKET',fee:300000,d:[L1,L1,L1,L2,L1,BL,L1,L1,L2,L1,L1,L2,L2,L2]},
+  {seg:'Supermarket',name:'GENSHAI',fee:500000,d:[Lx,L2,L2,L2,L2,L2,L2,Lx,L2,L1,L1,L2,L2,L2]},
+  {seg:'Supermarket',name:'LONG BEACH',fee:0,d:[L1,L1,L1,L2,L2,L1,L1,L1,L2,L1,L1,L2,L2,L2]},
+  {seg:'Supermarket',name:'LOTTE',fee:8000000,d:[L1,RJ,BL,L1,L2,L2,L2,L1,Lx,RJ,L2,L2,L2,L2]},
+  {seg:'Supermarket',name:'MENAS',fee:0,d:[L1,L1,L1,L2,L2,L2,L2,L2,L2,L1,L1,L1,L1,L1]},
+  {seg:'Supermarket',name:'SATRA',fee:500000,d:[L2,Lx,L2,L2,L2,L2,L2,L2,L2,Lx,L2,L2,L2,L2]},
+  {seg:'Supermarket',name:'WINMART',fee:50000000,d:[L2,L2,L2,L2,Lx,L2,Lx,Lx,L2,Lx,L2,L2,L2,L2]},
+];
+function fmtFee(v){if(!v)return'—';if(v>=1e6)return(v/1e6).toFixed(1)+'M';if(v>=1000)return Math.round(v/1000)+'K';return v}
+
+/* ══════════════════════════════════════
+   DATA — BOD (Tab 2) — 5 partners, sample
+══════════════════════════════════════ */
+/* Monthly plan = partner.planYear / 12, cumulated
+   Monthly actual = sample varying data */
+const MONTHS=['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+const CHANNELS=ALL_SEGS;
+
+const partners=[
+  {
+    id:'botanist',name:'The Botanist Gin',producer:'Rémy Cointreau',color:'#7F77DD',
+    sku:'The Botanist Gin 700ml',planYear:1200,
+    mktSupport:15000000,brandingFee:25000000,foc:null,
+    contract:'Volume rebate 130K–200K VND/chai',
+    monthlyActual:[95,102,88,110,105,98,115,112,100,92,85,0],
+    deliveries:[
+      {outlet:'WINMART',seg:'Supermarket',actual:272,plan:204,status:'Exceeded',method:'Direct'},
+      {outlet:'BIG C/TOPS/GO',seg:'Supermarket',actual:188,plan:204,status:'On Track',method:'Direct'},
+      {outlet:'ATC WINE MERCHANT',seg:'Liquor Store',actual:204,plan:204,status:'Exceeded',method:'Direct'},
+      {outlet:'AEON MALL',seg:'Supermarket',actual:156,plan:180,status:'On Track',method:'Direct'},
+      {outlet:'COOPMART',seg:'Supermarket',actual:148,plan:180,status:'On Track',method:'Distributor'},
+      {outlet:'LOTTE',seg:'Supermarket',actual:108,plan:144,status:'At Risk',method:'Direct'},
+      {outlet:'MINISTOP',seg:'CVS',actual:120,plan:144,status:'At Risk',method:'Distributor'},
+      {outlet:'7-ELEVEN',seg:'CVS',actual:86,plan:144,status:'Behind',method:'Distributor'},
+    ]
+  },
+  {
+    id:'ladytrieu',name:'Lady Trieu Gin',producer:'Overproof Holdings',color:'#1D9E75',
+    sku:'Lady Trieu 5 SKUs 700ml',planYear:540,
+    mktSupport:12000000,brandingFee:0,foc:'Buy 3 Get 1/tháng',
+    contract:'180 chai/năm excl. FOC · 5 SKUs',
+    monthlyActual:[38,42,35,48,44,40,50,47,42,36,30,0],
+    deliveries:[
+      {outlet:'ATC WINE MERCHANT',seg:'Liquor Store',actual:60,plan:60,status:'Exceeded',method:'Direct'},
+      {outlet:'AEON MALL',seg:'Supermarket',actual:51,plan:60,status:'On Track',method:'Direct'},
+      {outlet:'SHOPEE',seg:'Ecom',actual:55,plan:48,status:'Exceeded',method:'Platform'},
+      {outlet:'LOTTE',seg:'Supermarket',actual:48,plan:60,status:'On Track',method:'Distributor'},
+      {outlet:'WAREHOUSE',seg:'Liquor Store',actual:46,plan:48,status:'On Track',method:'Direct'},
+      {outlet:'BIG C/TOPS/GO',seg:'Supermarket',actual:35,plan:60,status:'At Risk',method:'Direct'},
+      {outlet:'LAZADA',seg:'Ecom',actual:38,plan:48,status:'At Risk',method:'Platform'},
+    ]
+  },
+  {
+    id:'campari',name:'Campari Group',producer:'Campari Group Vietnam',color:'#D85A30',
+    sku:'Aperol / Campari / Kingston62 / Skyy',planYear:2400,
+    mktSupport:30000000,brandingFee:20000000,foc:null,
+    contract:'Annual volume contract · multi-SKU',
+    monthlyActual:[185,198,172,210,205,192,220,215,198,180,160,0],
+    deliveries:[
+      {outlet:'VINMART+',seg:'CVS',actual:380,plan:400,status:'On Track',method:'Direct'},
+      {outlet:'BIG C/TOPS/GO',seg:'Supermarket',actual:312,plan:360,status:'On Track',method:'Direct'},
+      {outlet:'COOPMART',seg:'Supermarket',actual:290,plan:300,status:'On Track',method:'Distributor'},
+      {outlet:'WINMART',seg:'Supermarket',actual:265,plan:300,status:'On Track',method:'Direct'},
+      {outlet:'AEON MALL',seg:'Supermarket',actual:248,plan:300,status:'On Track',method:'Direct'},
+      {outlet:'7-ELEVEN',seg:'CVS',actual:185,plan:240,status:'At Risk',method:'Distributor'},
+      {outlet:'CIRCLE K',seg:'CVS',actual:172,plan:240,status:'At Risk',method:'Distributor'},
+      {outlet:'LOTTE',seg:'Supermarket',actual:155,plan:180,status:'At Risk',method:'Direct'},
+      {outlet:'SHOPEE',seg:'Ecom',actual:128,plan:120,status:'Exceeded',method:'Platform'},
+    ]
+  },
+  {
+    id:'wildturkey',name:'Wild Turkey Portfolio',producer:'Beam Suntory VN',color:'#EF9F27',
+    sku:'WT 12yo / 81 / 8yo / Rare Breed / Rye',planYear:900,
+    mktSupport:18000000,brandingFee:10000000,foc:null,
+    contract:'Tiered rebate · 5 SKUs · direct import',
+    monthlyActual:[68,75,62,80,78,70,85,82,74,65,58,0],
+    deliveries:[
+      {outlet:'ATC WINE MERCHANT',seg:'Liquor Store',actual:145,plan:144,status:'Exceeded',method:'Direct'},
+      {outlet:'WAREHOUSE',seg:'Liquor Store',actual:108,plan:120,status:'On Track',method:'Direct'},
+      {outlet:'DMS',seg:'Liquor Store',actual:96,plan:96,status:'On Track',method:'Direct'},
+      {outlet:'AEON MALL',seg:'Supermarket',actual:82,plan:96,status:'On Track',method:'Direct'},
+      {outlet:'WINMART',seg:'Supermarket',actual:75,plan:96,status:'At Risk',method:'Direct'},
+      {outlet:'LAZADA',seg:'Ecom',actual:60,plan:72,status:'At Risk',method:'Platform'},
+      {outlet:'BIG C/TOPS/GO',seg:'Supermarket',actual:55,plan:72,status:'Behind',method:'Distributor'},
+    ]
+  },
+  {
+    id:'no3gin',name:'No. 3 London Gin',producer:'Berry Bros. & Rudd',color:'#D4537E',
+    sku:'No. 3 London Dry Gin 700ml',planYear:360,
+    mktSupport:8000000,brandingFee:5000000,foc:null,
+    contract:'Annual listing · premium segment',
+    monthlyActual:[22,26,20,30,28,24,32,29,26,20,18,0],
+    deliveries:[
+      {outlet:'ATC WINE MERCHANT',seg:'Liquor Store',actual:48,plan:48,status:'On Track',method:'Direct'},
+      {outlet:'MEGA',seg:'Department Store',actual:38,plan:36,status:'Exceeded',method:'Direct'},
+      {outlet:'AEON MALL',seg:'Supermarket',actual:30,plan:36,status:'On Track',method:'Direct'},
+      {outlet:'WAREHOUSE',seg:'Liquor Store',actual:28,plan:36,status:'On Track',method:'Direct'},
+      {outlet:'GENSHAI',seg:'Supermarket',actual:20,plan:24,status:'At Risk',method:'Direct'},
+      {outlet:'LAZADA',seg:'Ecom',actual:15,plan:24,status:'Behind',method:'Platform'},
+    ]
+  },
+];
+
+/* ══════════════════════════════════════
+   HELPERS
+══════════════════════════════════════ */
+function switchTab(id,btn){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+function sPill(s){
+  const m={Exceeded:'background:#E1F5EE;color:#085041','On Track':'background:#E6F1FB;color:#0C447C','At Risk':'background:#FAEEDA;color:#633806',Behind:'background:#FCEBEB;color:#791F1F'};
+  return`<span class="status-pill" style="${m[s]||''}">${s}</span>`;
+}
+function mTag(m){
+  const mp={Direct:'background:#EEEDFE;color:#3C3489;border-color:#CECBF6',Distributor:'background:#F1EFE8;color:#444441;border-color:#D3D1C7',Platform:'background:#FBEAF0;color:#72243E;border-color:#F4C0D1'};
+  return`<span class="method-tag" style="${mp[m]||'border-color:var(--border-md)'}">${m}</span>`;
+}
+function pBar(a,p,col){
+  const w=Math.min(100,Math.round(a/p*100));
+  const c=a>=p?'#1D9E75':w>=80?'#378ADD':w>=60?'#EF9F27':'#E24B4A';
+  return`<span class="pbar-wrap"><span class="pbar-fill" style="width:${w}%;background:${col||c}"></span></span><span style="font-size:10px;color:var(--text-tertiary);margin-left:4px">${w}%</span>`;
+}
+function numFmt(n){return n.toLocaleString('vi-VN')}
+
+/* ══════════════════════════════════════
+   TAB 1 — DISTRIBUTION CHARTS
+══════════════════════════════════════ */
+const segCount={};distRows.forEach(r=>{segCount[r.seg]=(segCount[r.seg]||0)+1});
+const segVals=ALL_SEGS.map(s=>segCount[s]||0);
+const segColArr=ALL_SEGS.map(s=>segColors[s]);
+const dl=document.getElementById('donut-legend');
+ALL_SEGS.forEach((s,i)=>{dl.innerHTML+=`<span class="leg"><span class="leg-sq" style="background:${segColArr[i]}"></span>${s} ${segVals[i]}</span>`});
+new Chart(document.getElementById('segChart'),{type:'doughnut',data:{labels:ALL_SEGS,datasets:[{data:segVals,backgroundColor:segColArr,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw}`}}},cutout:'60%'}});
+const smRows=distRows.filter(r=>r.seg==='Supermarket'&&r.fee>0).sort((a,b)=>b.fee-a.fee);
+new Chart(document.getElementById('feeChart'),{type:'bar',data:{labels:smRows.map(o=>o.name),datasets:[{data:smRows.map(o=>+(o.fee/1e6).toFixed(1)),backgroundColor:'#1D9E75',borderRadius:4,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.raw}M VND`}}},scales:{x:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{font:{size:10},callback:v=>v+'M'}},y:{grid:{display:false},ticks:{font:{size:10}}}}}});
+
+let activeSegs=new Set(ALL_SEGS);
+function cHTML(v){if(!v)return'<span class="cell c0"></span>';if(v===1)return'<span class="cell c1"></span>';if(v===2)return'<span class="cell c2"></span>';if(v==='RL')return'<span class="cell crl"></span>';if(v==='BL')return'<span class="cell cbl"></span>';if(v==='L')return'<span class="cell cl"></span>';if(v==='RJ')return'<span class="cell crj"></span>';return'<span class="cell c0"></span>'}
+function cLabel(v){if(!v)return'—';if(v===1)return'Listed';if(v===2)return'Listed (2)';return v}
+function renderHM(){
+  const f=distRows.filter(r=>activeSegs.has(r.seg));
+  const tbl=document.getElementById('heatTable');
+  let h='<thead class="chdr"><tr><th class="f1">Kênh</th><th class="f2">Outlet</th><th class="f3">Fee</th>';
+  products.forEach(p=>{h+=`<th title="${p}"><span class="prod-label">${p}</span></th>`});
+  h+='</tr></thead><tbody>';
+  f.forEach(r=>{
+    h+=`<tr class="dr"><td class="f1"><span class="seg-tag" style="background:${segBg[r.seg]};color:${segTx[r.seg]}">${r.seg}</span></td><td class="f2" title="${r.name}">${r.name}</td><td class="f3">${fmtFee(r.fee)}</td>`;
+    r.d.forEach((v,i)=>{h+=`<td data-p="${products[i]}" data-o="${r.name}" data-v="${cLabel(v)}">${cHTML(v)}</td>`});
+    h+='</tr>';
+  });
+  tbl.innerHTML=h+'</tbody>';
+  tbl.querySelectorAll('td[data-p]').forEach(td=>{
+    td.addEventListener('mouseenter',()=>{document.getElementById('tip-o').textContent=td.dataset.o;document.getElementById('tip-p').textContent=td.dataset.p;document.getElementById('tip-v').textContent=td.dataset.v;document.getElementById('tip').style.display='block'});
+    td.addEventListener('mousemove',e=>{const t=document.getElementById('tip');t.style.left=(e.clientX+14)+'px';t.style.top=(e.clientY-10)+'px'});
+    td.addEventListener('mouseleave',()=>{document.getElementById('tip').style.display='none'});
+  });
+}
+function buildFilters(){
+  const w=document.getElementById('segFilters');
+  w.innerHTML='<span style="font-size:11px;color:var(--text-tertiary);margin-right:4px">Lọc:</span>';
+  const aBtn=document.createElement('button');aBtn.className='seg-btn active';aBtn.textContent='Tất cả';
+  aBtn.onclick=()=>{activeSegs=new Set(ALL_SEGS);w.querySelectorAll('.seg-btn').forEach(b=>b.classList.add('active'));renderHM()};
+  w.appendChild(aBtn);
+  ALL_SEGS.forEach(s=>{
+    const b=document.createElement('button');b.className='seg-btn active';b.textContent=s;b.style.cssText=`border-color:${segColors[s]}40`;
+    b.onclick=()=>{if(activeSegs.has(s)){if(activeSegs.size===1)return;activeSegs.delete(s);b.classList.remove('active')}else{activeSegs.add(s);b.classList.add('active')}aBtn.classList.toggle('active',activeSegs.size===ALL_SEGS.length);renderHM()};
+    w.appendChild(b);
+  });
+}
+buildFilters();renderHM();
+
+/* ══════════════════════════════════════
+   TAB 2 — BOD
+══════════════════════════════════════ */
+
+/* KPIs */
+(function(){
+  const totalActual=partners.reduce((s,p)=>s+p.monthlyActual.reduce((a,b)=>a+b,0),0);
+  const totalPlan=partners.reduce((s,p)=>s+p.planYear,0);
+  const riskCount=[...new Set(partners.flatMap(p=>p.deliveries.filter(d=>d.status==='Behind'||d.status==='At Risk').map(d=>d.outlet)))].length;
+  document.getElementById('kpi-total').textContent=numFmt(totalActual);
+  document.getElementById('kpi-plan').textContent=numFmt(totalPlan);
+  document.getElementById('kpi-pct').textContent=Math.round(totalActual/totalPlan*100)+'%';
+  document.getElementById('kpi-risk').textContent=riskCount;
+})();
+
+/* 1. Line chart — cumulative actual vs plan */
+(function(){
+  const planMonth=partners.reduce((s,p)=>s+Math.round(p.planYear/12),0);
+  const cumPlan=[],cumAct=[];
+  let sp=0,sa=0;
+  for(let i=0;i<12;i++){
+    sp+=planMonth;
+    const monthAct=partners.reduce((s,p)=>s+(p.monthlyActual[i]||0),0);
+    sa+=monthAct;
+    cumPlan.push(sp);
+    cumAct.push(sa);
+  }
+  document.getElementById('line-legend').innerHTML=`<span class="leg"><span class="leg-sq" style="background:#7F77DD"></span>Thực tế lũy kế</span><span class="leg"><span class="leg-sq" style="background:#D3D1C7;border:.5px dashed #888"></span>Kế hoạch lũy kế</span>`;
+  new Chart(document.getElementById('lineChart'),{
+    type:'line',
+    data:{labels:MONTHS,datasets:[
+      {label:'Thực tế',data:cumAct,borderColor:'#7F77DD',backgroundColor:'rgba(127,119,221,0.08)',tension:.35,pointRadius:3,pointHoverRadius:5,fill:true},
+      {label:'Kế hoạch',data:cumPlan,borderColor:'#B4B2A9',borderDash:[5,4],backgroundColor:'transparent',tension:.1,pointRadius:0,pointHoverRadius:4}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${numFmt(ctx.raw)} chai`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:10},callback:v=>numFmt(v)}}}}
+  });
+})();
+
+/* 2. Bar — outlet actual vs plan (top 10 by actual) */
+(function(){
+  const outletMap={};
+  partners.forEach(p=>p.deliveries.forEach(d=>{
+    if(!outletMap[d.outlet])outletMap[d.outlet]={actual:0,plan:0};
+    outletMap[d.outlet].actual+=d.actual;
+    outletMap[d.outlet].plan+=d.plan;
+  }));
+  const sorted=Object.entries(outletMap).sort((a,b)=>b[1].actual-a[1].actual).slice(0,10);
+  const oColors=sorted.map(e=>{const r=e[1].actual/e[1].plan;return r>=1?'#1D9E75':r>=0.8?'#378ADD':r>=0.6?'#EF9F27':'#E24B4A'});
+  const oPcts=sorted.map(e=>Math.round(e[1].actual/e[1].plan*100));
+
+  // Color legend above chart
+  const outletCard=document.getElementById('outletBar').closest('.card');
+  const legDiv=document.createElement('div');
+  legDiv.style.cssText='display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--text-secondary);margin-bottom:10px;align-items:center';
+  legDiv.innerHTML=`
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#1D9E75;display:inline-block"></span>Exceeded ≥100%</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#378ADD;display:inline-block"></span>On Track ≥80%</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#EF9F27;display:inline-block"></span>At Risk ≥60%</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#E24B4A;display:inline-block"></span>Behind &lt;60%</span>
+    <span style="display:flex;align-items:center;gap:4px;margin-left:4px"><span style="width:10px;height:10px;border-radius:2px;background:rgba(180,178,169,0.5);border:.5px solid #B4B2A9;display:inline-block"></span>Kế hoạch</span>`;
+  outletCard.insertBefore(legDiv, document.getElementById('outletBar').parentElement);
+
+  new Chart(document.getElementById('outletBar'),{
+    type:'bar',
+    data:{
+      labels:sorted.map(e=>e[0]),
+      datasets:[
+        {label:'Thực tế',data:sorted.map(e=>e[1].actual),backgroundColor:oColors,borderRadius:3,borderSkipped:false},
+        {label:'Kế hoạch',data:sorted.map(e=>e[1].plan),backgroundColor:'rgba(180,178,169,0.25)',borderColor:'#B4B2A9',borderWidth:.5,borderRadius:3,borderSkipped:false}
+      ]
+    },
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{
+        const e=sorted[ctx.dataIndex];
+        const pct=oPcts[ctx.dataIndex];
+        if(ctx.datasetIndex===0)return [' Thực tế: '+numFmt(ctx.raw)+' chai',' Tỷ lệ: '+pct+'%'];
+        return ' Kế hoạch: '+numFmt(ctx.raw)+' chai';
+      }}}},
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:10}}},
+        y:{grid:{display:false},ticks:{font:{size:10}}}
+      }
+    }
+  });
+})();
+
+/* 3a. Partner donut */
+(function(){
+  const labels=partners.map(p=>p.name);
+  const actuals=partners.map(p=>p.monthlyActual.reduce((a,b)=>a+b,0));
+  const colors=partners.map(p=>p.color);
+  const leg=document.getElementById('partner-donut-legend');
+  partners.forEach((p,i)=>{leg.innerHTML+=`<span class="leg"><span class="leg-sq" style="background:${p.color}"></span>${p.name.split(' ').slice(0,2).join(' ')} ${actuals[i]}</span>`});
+  new Chart(document.getElementById('partnerDonut'),{
+    type:'doughnut',
+    data:{labels,datasets:[{data:actuals,backgroundColor:colors,borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw} chai`}}},cutout:'58%'}
+  });
+})();
+
+/* 3b. Partner actual vs plan — color-coded bars + completion % line */
+(function(){
+  const labels=partners.map(p=>p.name.split(' ').slice(0,2).join(' '));
+  const actuals=partners.map(p=>p.monthlyActual.reduce((a,b)=>a+b,0));
+  const plans=partners.map(p=>p.planYear);
+  const pcts=actuals.map((a,i)=>Math.round(a/plans[i]*100));
+  const barColors=actuals.map((a,i)=>a>=plans[i]?'#1D9E75':a/plans[i]>=0.8?'#378ADD':a/plans[i]>=0.6?'#EF9F27':'#E24B4A');
+  new Chart(document.getElementById('partnerBar'),{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'Thực tế',data:actuals,backgroundColor:barColors,borderRadius:3,borderSkipped:false,yAxisID:'y',order:2},
+        {label:'Kế hoạch',data:plans,backgroundColor:'rgba(180,178,169,0.25)',borderColor:'#B4B2A9',borderWidth:.5,borderRadius:3,borderSkipped:false,yAxisID:'y',order:3},
+        {label:'Tỷ lệ %',data:pcts,type:'line',borderColor:'#1a1a18',backgroundColor:'transparent',tension:.3,pointRadius:4,pointHoverRadius:6,pointBackgroundColor:pcts.map(v=>v>=100?'#1D9E75':v>=80?'#378ADD':v>=60?'#EF9F27':'#E24B4A'),borderWidth:1.5,yAxisID:'y2',order:1}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{
+        if(ctx.dataset.label==='Tỷ lệ %')return ' Hoàn thành: '+ctx.raw+'%';
+        return ' '+ctx.dataset.label+': '+numFmt(ctx.raw)+' chai';
+      }}}},
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:10},maxRotation:20}},
+        y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:10},callback:v=>numFmt(v)},title:{display:true,text:'Chai',font:{size:9},color:'#9b9b96'}},
+        y2:{position:'right',min:0,max:140,grid:{display:false},ticks:{font:{size:10},callback:v=>v+'%'},title:{display:true,text:'Tỷ lệ %',font:{size:9},color:'#9b9b96'}}
+      }
+    }
+  });
+})();
+
+/* 4. Heatmap partner × channel */
+(function(){
+  // Build matrix: partners vs channels
+  const matrix={};
+  partners.forEach(p=>{
+    matrix[p.id]={};
+    CHANNELS.forEach(ch=>{matrix[p.id][ch]=0});
+    p.deliveries.forEach(d=>{matrix[p.id][d.seg]=(matrix[p.id][d.seg]||0)+d.actual});
+  });
+  const allVals=partners.flatMap(p=>CHANNELS.map(ch=>matrix[p.id][ch]));
+  const maxVal=Math.max(...allVals);
+
+  function heatColor(v,max){
+    if(!v)return{bg:'#f7f6f3',tx:'#9b9b96'};
+    const pct=v/max;
+    if(pct<.2)return{bg:'#E1F5EE',tx:'#085041'};
+    if(pct<.4)return{bg:'#9FE1CB',tx:'#085041'};
+    if(pct<.6)return{bg:'#1D9E75',tx:'#fff'};
+    if(pct<.8)return{bg:'#0F6E56',tx:'#fff'};
+    return{bg:'#085041',tx:'#fff'};
+  }
+
+  let h='<thead><tr><th class="left">Đối tác SX</th>';
+  CHANNELS.forEach(ch=>{h+=`<th>${ch}</th>`});
+  h+='<th>Tổng</th></tr></thead><tbody>';
+  partners.forEach(p=>{
+    const rowTotal=CHANNELS.reduce((s,ch)=>s+matrix[p.id][ch],0);
+    h+=`<tr><td class="left"><span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:${p.color};flex-shrink:0"></span>${p.name}</span></td>`;
+    CHANNELS.forEach(ch=>{
+      const v=matrix[p.id][ch];
+      const {bg,tx}=heatColor(v,maxVal);
+      h+=`<td><span class="heat-cell" style="background:${bg};color:${tx}">${v||'—'}</span></td>`;
+    });
+    const {bg:tbg,tx:ttx}=heatColor(rowTotal,partners.reduce((s,p2)=>s+CHANNELS.reduce((ss,ch)=>ss+matrix[p2.id][ch],0),0)/partners.length*1.5);
+    h+=`<td><span class="heat-cell" style="background:${tbg};color:${ttx};font-weight:600">${numFmt(rowTotal)}</span></td></tr>`;
+  });
+  // Footer: channel totals
+  h+='<tr style="background:var(--surface2)"><td class="left" style="font-weight:500;color:var(--text-secondary)">Tổng kênh</td>';
+  let grandTotal=0;
+  CHANNELS.forEach(ch=>{
+    const chTotal=partners.reduce((s,p)=>s+matrix[p.id][ch],0);
+    grandTotal+=chTotal;
+    h+=`<td style="font-weight:500;font-size:11px">${numFmt(chTotal)||'—'}</td>`;
+  });
+  h+=`<td style="font-weight:600">${numFmt(grandTotal)}</td></tr>`;
+  document.getElementById('bodHmTable').innerHTML=h+'</tbody>';
+})();
+
+/* 5. Partner filter + unified detail table */
+(function(){
+  const wrap=document.getElementById('accordionWrap');
+
+  // Build filter bar HTML
+  let filterHTML='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px" id="partnerFilters">';
+  filterHTML+='<span style="font-size:11px;color:var(--text-tertiary)">Đối tác:</span>';
+  filterHTML+='<button class="seg-btn active" data-pid="all">Tất cả</button>';
+  partners.forEach(p=>{
+    filterHTML+=`<button class="seg-btn active" data-pid="${p.id}" style="border-color:${p.color}40"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${p.color};margin-right:4px;vertical-align:middle"></span>${p.name.split(' ').slice(0,2).join(' ')}</button>`;
+  });
+  filterHTML+='</div>';
+
+  // Legend
+  filterHTML+=`<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--text-secondary);margin-bottom:10px;align-items:center">
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#1D9E75;display:inline-block"></span>Exceeded (≥100%)</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#378ADD;display:inline-block"></span>On Track (≥80%)</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#EF9F27;display:inline-block"></span>At Risk (≥60%)</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#E24B4A;display:inline-block"></span>Behind (&lt;60%)</span>
+  </div>`;
+
+  // Table container
+  filterHTML+=`<div class="scroll-wrap" style="max-height:480px">
+    <table class="bod-tbl" id="detailTable">
+      <thead><tr>
+        <th>Đối tác SX</th>
+        <th>Đại lý</th>
+        <th>Kênh</th>
+        <th class="r">Thực tế</th>
+        <th class="r">Kế hoạch</th>
+        <th class="r">+/−</th>
+        <th style="min-width:130px">vs. KH</th>
+        <th>Trạng thái</th>
+        <th>Hình thức</th>
+      </tr></thead>
+      <tbody id="detailTbody"></tbody>
+    </table>
+  </div>`;
+
+  wrap.innerHTML=filterHTML;
+
+  // Build flat rows
+  const allRows=[];
+  partners.forEach(p=>{
+    p.deliveries.forEach(d=>{
+      allRows.push({...d,partnerId:p.id,partnerName:p.name,partnerColor:p.color,partnerShort:p.name.split(' ').slice(0,2).join(' ')});
+    });
+  });
+
+  function renderDetail(pid){
+    const rows=pid==='all'?allRows:allRows.filter(r=>r.partnerId===pid);
+    const tbody=document.getElementById('detailTbody');
+    if(!rows.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--text-tertiary);padding:24px">Không có dữ liệu</td></tr>';return}
+
+    // Group by partner for subtotals
+    const grouped={};
+    rows.forEach(r=>{
+      if(!grouped[r.partnerId])grouped[r.partnerId]={rows:[],p:r};
+      grouped[r.partnerId].rows.push(r);
+    });
+
+    let h='';
+    Object.values(grouped).forEach(g=>{
+      const subAct=g.rows.reduce((s,d)=>s+d.actual,0);
+      const subPlan=g.rows.reduce((s,d)=>s+d.plan,0);
+      const subPct=Math.round(subAct/subPlan*100);
+      const subDiff=subAct-subPlan;
+      const subDiffFmt=(subDiff>=0?'+':'')+numFmt(subDiff);
+      const subDiffColor=subDiff>=0?'#1D9E75':'#E24B4A';
+
+      // Partner group header row
+      h+=`<tr style="background:var(--surface2);border-top:.5px solid var(--border-md)">
+        <td colspan="3" style="padding:7px 12px">
+          <span style="display:inline-flex;align-items:center;gap:6px;font-weight:500">
+            <span style="width:8px;height:8px;border-radius:50%;background:${g.p.partnerColor};flex-shrink:0"></span>
+            ${g.p.partnerName}
+          </span>
+        </td>
+        <td class="r" style="font-weight:500">${numFmt(subAct)}</td>
+        <td class="r" style="color:var(--text-secondary)">${numFmt(subPlan)}</td>
+        <td class="r" style="font-weight:500;color:${subDiffColor}">${subDiffFmt}</td>
+        <td colspan="3">
+          <span class="pbar-wrap" style="width:90px"><span class="pbar-fill" style="width:${Math.min(100,subPct)}%;background:${g.p.partnerColor}"></span></span>
+          <span style="font-size:10px;margin-left:4px;font-weight:500">${subPct}%</span>
+        </td>
+      </tr>`;
+
+      // Detail rows
+      g.rows.forEach(d=>{
+        const pct=Math.round(d.actual/d.plan*100);
+        const diff=d.actual-d.plan;
+        const diffFmt=(diff>=0?'+':'')+numFmt(diff);
+        const diffColor=diff>=0?'#1D9E75':'#E24B4A';
+        const barColor=pct>=100?'#1D9E75':pct>=80?'#378ADD':pct>=60?'#EF9F27':'#E24B4A';
+        h+=`<tr>
+          <td style="color:var(--text-tertiary);font-size:10px;padding-left:24px">${d.partnerShort}</td>
+          <td style="font-weight:500">${d.outlet}</td>
+          <td><span class="seg-tag" style="background:${segBg[d.seg]};color:${segTx[d.seg]}">${d.seg}</span></td>
+          <td class="r" style="font-weight:500">${numFmt(d.actual)}</td>
+          <td class="r" style="color:var(--text-secondary)">${numFmt(d.plan)}</td>
+          <td class="r" style="color:${diffColor};font-weight:500">${diffFmt}</td>
+          <td>
+            <span class="pbar-wrap" style="width:90px"><span class="pbar-fill" style="width:${Math.min(100,pct)}%;background:${barColor}"></span></span>
+            <span style="font-size:10px;color:var(--text-tertiary);margin-left:4px">${pct}%</span>
+          </td>
+          <td>${sPill(d.status)}</td>
+          <td>${mTag(d.method)}</td>
+        </tr>`;
+      });
+    });
+
+    // Grand total row
+    if(rows.length>1){
+      const gAct=rows.reduce((s,d)=>s+d.actual,0);
+      const gPlan=rows.reduce((s,d)=>s+d.plan,0);
+      const gPct=Math.round(gAct/gPlan*100);
+      const gDiff=gAct-gPlan;
+      h+=`<tr class="total-row">
+        <td colspan="3">Tổng cộng</td>
+        <td class="r">${numFmt(gAct)}</td>
+        <td class="r">${numFmt(gPlan)}</td>
+        <td class="r" style="color:${gDiff>=0?'#1D9E75':'#E24B4A'};font-weight:500">${(gDiff>=0?'+':'')+numFmt(gDiff)}</td>
+        <td colspan="3">
+          <span class="pbar-wrap" style="width:90px"><span class="pbar-fill" style="width:${Math.min(100,gPct)}%;background:${gPct>=100?'#1D9E75':gPct>=80?'#378ADD':gPct>=60?'#EF9F27':'#E24B4A'}"></span></span>
+          <span style="font-size:10px;font-weight:500;margin-left:4px">${gPct}%</span>
+        </td>
+      </tr>`;
+    }
+    tbody.innerHTML=h;
+  }
+
+  // Filter interaction
+  let activePid='all';
+  renderDetail('all');
+  document.getElementById('partnerFilters').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-pid]');
+    if(!btn)return;
+    activePid=btn.dataset.pid;
+    document.querySelectorAll('#partnerFilters [data-pid]').forEach(b=>{
+      b.classList.toggle('active',b.dataset.pid===activePid||(activePid==='all'&&b.dataset.pid==='all'));
+    });
+    if(activePid==='all'){
+      document.querySelectorAll('#partnerFilters [data-pid]').forEach(b=>b.classList.add('active'));
+    }
+    renderDetail(activePid);
+  });
+})();
+</script>
+</body>
+</html>
